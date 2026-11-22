@@ -1,0 +1,30 @@
+---
+- name: Check Connection
+  ansible.builtin.setup:
+  register: reachable_check
+- meta: clear_host_errors
+
+- name: Check ALL Hosts Are Reacheable Before Doing The Release
+  assert:
+    that:
+      - ansible_play_hosts == groups.all
+    fail_msg: 1 or more host is UNREACHABLE
+    success_msg: ALL hosts are REACHABLE, continue...
+  when: action_runner not in ['addmember', 'remove']
+
+- name: Update All Packages
+  apt: name=* state=latest
+
+- name: Update and Upgrade apt packages
+  become: true
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Install dependências
+  apt:
+    pkg: "{{ packages }}"
+    state: present
+    update_cache: true
+

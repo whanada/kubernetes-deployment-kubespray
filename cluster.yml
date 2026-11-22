@@ -1,0 +1,84 @@
+---
+#---------------
+# Pre Deploy
+#---------------
+- name: Prepare all nodes
+  hosts: all
+  gather_facts: false
+  become: true
+  roles:
+    - { role: pre/icmp } 
+    - { role: pre/nodes }
+    - { role: pre/vip, when: action_runner == 'install' }
+
+#---------------
+# Install K8S
+#---------------
+- name: Install Kubernetes
+  vars: &kubespray_vars
+    kube_version: "{{ kubernetes_version }}"
+    apiserver_loadbalancer_domain_name: "{{ dns_loadbalancer }}"
+    loadbalancer_apiserver:
+      address: "{{ vip }}"
+      port: 6443
+    metrics_server_enabled: true
+    metrics_server_kubelet_insecure_tls: true
+    kube_network_plugin_multus: false
+    kube_service_addresses: "{{ kubernetes_service_addresses }}"
+    kube_pods_subnet: "{{ kubernetes_pods_subnet }}"
+    kube_proxy_strict_arp: true
+    kube_vip_enabled: true
+    kube_vip_address: "{{ vip }}"
+    kube_vip_arp_enabled: true
+    kube_vip_controlplane_enabled: true
+    kube_vip_lb_enable: true
+    kube_vip_services_enabled: false
+    metallb_enabled: true
+    metallb_namespace: metallb-system
+    metallb_config:
+      address_pools:
+        primary:
+          ip_range:
+            - "{{ kube_vip_range_loadbalancer }}"
+      layer2:
+        - primary
+  ansible.builtin.import_playbook: kubernetes_sigs.kubespray.cluster
+  when: (action_runner == 'install' or 
+         action_runner == 'addmember')
+
+#---------------
+# Reset Cluster
+#---------------
+- name: Reset Cluster Kubernetes
+  vars: *kubespray_vars
+  ansible.builtin.import_playbook: kubernetes_sigs.kubespray.reset
+  when: (action_runner == 'reset')
+
+#---------------
+# Remove Node
+#---------------
+- name: Remove Kubernetes
+  vars: *kubespray_vars
+  ansible.builtin.import_playbook: kubernetes_sigs.kubespray.remove_node
+  when: (action_runner == 'remove')
+
+#---------------
+# Upgrade K8S
+#---------------
+- name: Upgrade Kubernetes
+  vars: *kubespray_vars
+  ansible.builtin.import_playbook: kubernetes_sigs.kubespray.upgrade_cluster
+  when: (action_runner == 'upgrade')
+
+#---------------
+# Componentes K8S
+#---------------
+- name: Install Componentes Cluster
+  hosts: vip
+  become: true
+  roles:
+    - { role: pos/change-label, when: 
+              (action_runner == 'install' or action_runner == 'addmember') }
+
+    - { role: pos/helm, when:
+              (action_runner == 'install' or action_runner == 'addmember') }

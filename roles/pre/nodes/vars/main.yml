@@ -1,0 +1,26 @@
+
+packages:
+  - bash-completion
+  - gpg
+  - gnupg
+  - apt-transport-https
+  - build-essential
+  - ca-certificates
+  - cifs-utils
+  - curl
+  - git
+  - git-lfs
+  - gnupg
+  - jq
+  - lsb-release
+  - lvm2
+  - net-tools
+  - nfs-common
+  - openssl
+  - software-properties-common
+  - screen
+  - sudo
+  - vim
+  - wget
+  - zlib1g
+  - zlib1g-dev

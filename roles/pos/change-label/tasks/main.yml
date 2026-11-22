@@ -1,0 +1,4 @@
+---
+- name: Change Label Worker
+  command: kubectl label node "{{ item }}" kubernetes.io/role=worker --overwrite
+  loop: "{{ groups['kube_node'] }}"

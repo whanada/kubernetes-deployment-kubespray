@@ -1,0 +1,51 @@
+# Copy this file, then replace the monitor addresses and filesystem name.
+apiVersion: csi.ceph.io/v1
+kind: Driver
+metadata:
+  name: cephfs.csi.ceph.com
+  namespace: ceph-csi-operator-system
+---
+apiVersion: csi.ceph.io/v1
+kind: CephConnection
+metadata:
+  name: ceph-external
+  namespace: ceph-csi-operator-system
+spec:
+  monitors:
+    - 192.0.2.11:6789
+    - 192.0.2.12:6789
+    - 192.0.2.13:6789
+---
+apiVersion: csi.ceph.io/v1
+kind: ClientProfile
+metadata:
+  name: cephfs-storage
+  namespace: ceph-csi-operator-system
+spec:
+  cephConnectionRef:
+    name: ceph-external
+  cephFs:
+    subVolumeGroup: csi
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: cephfs
+provisioner: cephfs.csi.ceph.com
+parameters:
+  # The clusterID must equal the ClientProfile name above.
+  clusterID: cephfs-storage
+  fsName: REPLACE_WITH_CEPHFS_NAME
+  # Optional: use a CephFS data pool already attached to this filesystem.
+  # pool: REPLACE_WITH_CEPHFS_DATA_POOL
+  csi.storage.k8s.io/provisioner-secret-name: cephfs-csi-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: ceph-csi-operator-system
+  csi.storage.k8s.io/controller-expand-secret-name: cephfs-csi-secret
+  csi.storage.k8s.io/controller-expand-secret-namespace: ceph-csi-operator-system
+  csi.storage.k8s.io/controller-publish-secret-name: cephfs-csi-secret
+  csi.storage.k8s.io/controller-publish-secret-namespace: ceph-csi-operator-system
+  csi.storage.k8s.io/node-stage-secret-name: cephfs-csi-secret
+  csi.storage.k8s.io/node-stage-secret-namespace: ceph-csi-operator-system
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate

@@ -1,0 +1,2 @@
+- ansible.builtin.import_playbook: "{{ (kubespray_dir | default(playbook_dir + '/../../../../../vendor/kubespray')) }}/remove-node.yml"
+

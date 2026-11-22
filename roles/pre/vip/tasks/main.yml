@@ -1,0 +1,12 @@
+---
+- name: Get VIP Interface
+  shell: ip a show {{ iface }} | grep -o {{ vip }} || echo "None"
+  when: inventory_hostname in groups["vip"]
+  register: result_vip
+
+- name: add ip set first controlplane
+  shell: ip a add {{ vip }} dev {{ iface }}
+  when: (inventory_hostname in groups["vip"] and
+        result_vip.stdout == "None")
+
+

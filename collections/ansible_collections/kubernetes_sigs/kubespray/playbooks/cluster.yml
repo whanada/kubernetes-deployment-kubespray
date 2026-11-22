@@ -1,0 +1,3 @@
+# Expose Kubespray's cluster.yml via FQCN
+- ansible.builtin.import_playbook: "{{ (kubespray_dir | default(playbook_dir + '/../../../../../vendor/kubespray')) }}/cluster.yml"
+
